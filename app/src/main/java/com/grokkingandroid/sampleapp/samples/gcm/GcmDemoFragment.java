@@ -22,6 +22,7 @@ import android.content.Intent;
 import android.content.SharedPreferences;
 import android.os.Build;
 import android.os.Bundle;
+import android.os.Handler;
 import android.preference.PreferenceManager;
 import android.text.TextUtils;
 import android.util.Log;
@@ -42,9 +43,12 @@ import de.greenrobot.event.EventBus;
 import de.keyboardsurfer.android.widget.crouton.Crouton;
 import de.keyboardsurfer.android.widget.crouton.Style;
 
+
+
 public class GcmDemoFragment extends DemoBaseFragment implements
       View.OnClickListener {
 
+   private static int count = 0;
    private static final int RC_RES_REQUEST = 100;
    private static final int RC_SELECT_ACCOUNT = 200;
    private Button mBtnRegister;
@@ -208,14 +212,32 @@ public class GcmDemoFragment extends DemoBaseFragment implements
       if (!TextUtils.isEmpty(mTxtMsg.getText())) {
          msg = mTxtMsg.getText().toString();
          mTxtMsg.setText("");
+         String msgTxt = getString(R.string.msg_sent, msg);
+         Crouton.showText(getActivity(), msgTxt, Style.INFO);
+         msgIntent.putExtra(Constants.KEY_MESSAGE_TXT, msg);
+         getActivity().startService(msgIntent);
       }
       else {
-         msg = getActivity().getString(R.string.no_message);
+         final String[] test = {"hello","world","cse","110","software","engineering"};
+         final Handler handler = new Handler();
+         //msg = getActivity().getString(R.string.no_message);
+         handler.post(new Runnable() {
+            @Override
+            public void run() {
+               Intent msgIntent = new Intent(getActivity(), GcmIntentService.class);
+               msgIntent.setAction(Constants.ACTION_ECHO);
+               String msgTxt = getString(R.string.msg_sent, test[count]);
+               Crouton.showText(getActivity(), msgTxt, Style.INFO);
+               msgIntent.putExtra(Constants.KEY_MESSAGE_TXT, test[count]);
+               getActivity().startService(msgIntent);
+               count++;
+               if(count < 6) {
+                  handler.postDelayed(this, 10000);
+               }
+            }
+         });
       }
-      String msgTxt = getString(R.string.msg_sent, msg);
-      Crouton.showText(getActivity(), msgTxt, Style.INFO);            
-      msgIntent.putExtra(Constants.KEY_MESSAGE_TXT, msg);
-      getActivity().startService(msgIntent);
+
    }
 
     /**
